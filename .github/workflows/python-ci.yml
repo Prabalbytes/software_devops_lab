@@ -10,6 +10,10 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./02_GitHub_CLI_and_VSCode
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
