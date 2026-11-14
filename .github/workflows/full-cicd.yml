@@ -70,8 +70,16 @@ jobs:
 
     steps:
       - name: Trigger Render deployment
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          IMAGE="docker.io/nuxudhbi/flask-demo:${GITHUB_SHA}"
+
+          echo "Deploying image: ${IMAGE}"
+
+          curl -fsS -X POST \
+            -G "${DEPLOY_HOOK}" \
+            --data-urlencode "imgURL=${IMAGE}"
 
   health-check:
     needs: deploy
