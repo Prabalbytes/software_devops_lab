@@ -72,3 +72,31 @@ jobs:
       - name: Trigger Render deployment
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for Render deployment
+        run: sleep 30
+
+      - name: Check application health
+        run: |
+          URL="https://flask-demo-latest.onrender.com"
+
+          for i in {1..10}; do
+            STATUS=$(curl -s -o response.json -w "%{http_code}" "$URL")
+
+            if [ "$STATUS" = "200" ] && grep -q "Hello from a containerized Flask app!" response.json; then
+              echo "Application is healthy!"
+              cat response.json
+              exit 0
+            fi
+
+            echo "Attempt $i failed. HTTP status: $STATUS"
+            sleep 15
+          done
+
+          echo "Health check failed!"
+          exit 1
