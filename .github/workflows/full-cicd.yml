@@ -63,3 +63,12 @@ jobs:
           tags: |
             nuxudhbi/flask-demo:${{ github.sha }}
             nuxudhbi/flask-demo:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render deployment
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
