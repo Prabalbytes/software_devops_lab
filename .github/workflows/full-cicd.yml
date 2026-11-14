@@ -108,3 +108,58 @@ jobs:
 
           echo "Health check failed!"
           exit 1
+
+  promote-stable:
+    needs: health-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Promote current image to stable
+        run: |
+          docker pull nuxudhbi/flask-demo:${GITHUB_SHA}
+          docker tag nuxudhbi/flask-demo:${GITHUB_SHA} nuxudhbi/flask-demo:stable
+          docker push nuxudhbi/flask-demo:stable
+
+  rollback:
+    needs: health-check
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger rollback to stable image
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          echo "Rolling back to stable image"
+
+          curl -fsS -X POST \
+            -G "${DEPLOY_HOOK}" \
+            --data-urlencode "imgURL=docker.io/nuxudhbi/flask-demo:stable"
+
+      - name: Verify rollback health
+        run: |
+          URL="https://flask-demo-latest.onrender.com"
+
+          sleep 30
+
+          for i in {1..10}; do
+            STATUS=$(curl -s -o response.json -w "%{http_code}" "$URL")
+
+            if [ "$STATUS" = "200" ] && grep -q "Hello from a containerized Flask app!" response.json; then
+              echo "Rollback successful!"
+              cat response.json
+              exit 0
+            fi
+
+            echo "Rollback verification attempt $i failed. HTTP: $STATUS"
+            sleep 15
+          done
+
+          echo "Rollback verification failed!"
+          exit 1
