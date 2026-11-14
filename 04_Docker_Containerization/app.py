@@ -6,6 +6,9 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
+    raise RuntimeError("V2 crashes!")
+
+
     return jsonify(
         message="Hello from a containerized Flask app!",
         environment=os.getenv("APP_ENV", "development")
