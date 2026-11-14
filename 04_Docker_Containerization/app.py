@@ -6,9 +6,6 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    raise RuntimeError("Simulated deployment failure")
-
-
     return jsonify(
         message="Hello from a containerized Flask app!",
         environment=os.getenv("APP_ENV", "development")
