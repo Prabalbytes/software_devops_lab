@@ -4,8 +4,10 @@ import psycopg2
 
 app = Flask(__name__)
 
+
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
+
 
 @app.route("/init")
 def init_db():
@@ -24,6 +26,7 @@ def init_db():
     conn.close()
 
     return "database initialized"
+
 
 @app.route("/count")
 def count():
@@ -45,6 +48,7 @@ def count():
     conn.close()
 
     return jsonify(total_visits=n)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
